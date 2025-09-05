@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Универсальный медиаплеер и конвертер</title>
-    <script src="https://unpkg.com/ffmpeg@0.10.1/dist/ffmpeg.min.js"></script>
+    <title>Универсальный медиаплеер с RTMP</title>
+    <script src="https://unpkg.com/@videojs/http-streaming@2.14.2/dist/videojs-http-streaming.min.js"></script>
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #3498db;
@@ -63,7 +64,7 @@
             gap: 30px;
         }
         
-        .player-section, .converter-section {
+        .player-section, .converter-section, .rtmp-section {
             flex: 1;
             min-width: 300px;
             background: rgba(52, 73, 94, 0.7);
@@ -104,6 +105,14 @@
         }
         
         .media-player {
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .rtmp-player {
             width: 100%;
             background: #000;
             border-radius: 8px;
@@ -174,12 +183,24 @@
             margin-bottom: 20px;
         }
         
-        select, input {
+        .rtmp-input {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        select, input, textarea {
             padding: 12px;
             border-radius: 5px;
             border: 1px solid var(--primary-color);
             background: var(--dark-color);
             color: var(--light-color);
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
         }
         
         .converter-result {
@@ -268,12 +289,28 @@
             color: #ddd;
         }
         
+        .example-streams {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #bbb;
+        }
+        
+        .example-streams a {
+            color: var(--primary-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .example-streams a:hover {
+            text-decoration: underline;
+        }
+        
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
             }
             
-            .converter-options {
+            .converter-options, .rtmp-input {
                 grid-template-columns: 1fr;
             }
         }
@@ -303,13 +340,17 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .vjs-default-skin .vjs-big-play-button {
+            background-color: var(--primary-color) !important;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Универсальный медиаплеер и конвертер</h1>
-            <p class="tagline">Воспроизведение и преобразование любых медиаформатов прямо в браузере!</p>
+            <h1>Универсальный медиаплеер с RTMP</h1>
+            <p class="tagline">Воспроизведение локальных файлов и RTMP потоков</p>
         </header>
         
         <div class="main-content">
@@ -323,7 +364,7 @@
                     </div>
                     
                     <div class="media-player">
-                        <video id="videoPlayer" width="100%" controls style="display:none;">
+                        <video id="videoPlayer" width="100%" controls style="display:none;" class="video-js vjs-default-skin">
                             Ваш браузер не поддерживает видео элемент.
                         </video>
                         <audio id="audioPlayer" width="100%" controls style="display:none;">
@@ -342,6 +383,32 @@
                             <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <div class="rtmp-section">
+                <h2>RTMP Плеер</h2>
+                <div class="rtmp-input">
+                    <div>
+                        <label for="rtmpUrl">URL RTMP потока:</label>
+                        <input type="text" id="rtmpUrl" placeholder="rtmp://example.com/live/stream">
+                    </div>
+                    
+                    <button id="playRtmp" class="play-btn">▶️ Воспроизвести RTMP</button>
+                    
+                    <div class="example-streams">
+                        <p>Примеры тестовых потоков (могут не работать):</p>
+                        <p><a href="#" data-stream="rtmp://184.72.239.149/vod/mp4:bigbuckbunny_1500.mp4">Big Buck Bunny</a> | 
+                        <a href="#" data-stream="rtmp://ns8.indexforce.com/home/mystream">Тестовый поток</a></p>
+                    </div>
+                </div>
+                
+                <div class="rtmp-player">
+                    <video id="rtmpPlayer" class="video-js vjs-default-skin" controls preload="auto" width="100%" height="300">
+                        <p class="vjs-no-js">
+                            Для просмотра видео пожалуйста включите JavaScript в вашем браузере.
+                        </p>
+                    </video>
                 </div>
             </div>
             
@@ -423,20 +490,25 @@
                 <div class="format-item">GIF</div>
                 <div class="format-item">BMP</div>
                 <div class="format-item">WEBP</div>
+                <div class="format-item">RTMP</div>
+                <div class="format-item">HLS</div>
+                <div class="format-item">DASH</div>
             </div>
             <p style="margin-top: 15px; text-align: center; font-style: italic;">
-                Конвертация происходит прямо в вашем браузере без отправки файлов на сервер!
+                Воспроизведение локальных файлов и потоковых трансляций
             </p>
         </div>
         
         <footer>
-            <p>Универсальный медиаплеер и конвертер © 2023</p>
-            <p>Работает на технологии FFmpeg.WASM</p>
+            <p>Универсальный медиаплеер с RTMP © 2023</p>
+            <p>Работает на технологии Video.js с RTMP поддержкой</p>
         </footer>
     </div>
 
+    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/videojs-flash@2.2.1/dist/videojs-flash.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', function() {
             // Элементы плеера
             const mediaFile = document.getElementById('mediaFile');
             const videoPlayer = document.getElementById('videoPlayer');
@@ -448,6 +520,19 @@
             const volumeControl = document.getElementById('volume');
             const mediaControls = document.getElementById('mediaControls');
             
+            // Элементы RTMP плеера
+            const rtmpUrl = document.getElementById('rtmpUrl');
+            const playRtmpBtn = document.getElementById('playRtmp');
+            const rtmpPlayer = videojs('rtmpPlayer', {
+                fluid: true,
+                liveui: true,
+                plugins: {
+                    flash: {
+                        swf: 'https://vjs.zencdn.net/swf/5.4.0/video-js.swf'
+                    }
+                }
+            });
+            
             // Элементы конвертера
             const convertFile = document.getElementById('convertFile');
             const convertBtn = document.getElementById('convertBtn');
@@ -458,27 +543,6 @@
             const statusMessage = document.getElementById('statusMessage');
             
             let currentPlayer = null;
-            let ffmpeg = null;
-            
-            // Инициализация FFmpeg
-            try {
-                showStatus('Загрузка конвертера...', 'info');
-                const { createFFmpeg } = FFmpeg;
-                ffmpeg = createFFmpeg({ 
-                    log: true,
-                    progress: ({ ratio }) => {
-                        conversionProgressBar.style.width = `${ratio * 100}%`;
-                    }
-                });
-                
-                await ffmpeg.load();
-                showStatus('Конвертер готов к работе!', 'success');
-                setTimeout(() => {
-                    statusMessage.style.display = 'none';
-                }, 3000);
-            } catch (error) {
-                showStatus('Ошибка загрузки конвертера: ' + error.message, 'error');
-            }
             
             // Загрузка медиафайла
             document.getElementById('uploadMedia').addEventListener('click', function() {
@@ -560,106 +624,62 @@
                 }
             });
             
+            // Воспроизведение RTMP потока
+            playRtmpBtn.addEventListener('click', function() {
+                const streamUrl = rtmpUrl.value.trim();
+                if (!streamUrl) {
+                    showStatus('Введите URL RTMP потока', 'error');
+                    return;
+                }
+                
+                try {
+                    // Останавливаем текущее воспроизведение
+                    rtmpPlayer.pause();
+                    
+                    // Настраиваем источник
+                    rtmpPlayer.src({
+                        src: streamUrl,
+                        type: 'rtmp/mp4',
+                        withCredentials: false
+                    });
+                    
+                    // Запускаем воспроизведение
+                    rtmpPlayer.play();
+                    showStatus('Подключение к RTMP потоку...', 'info');
+                    
+                } catch (error) {
+                    showStatus('Ошибка воспроизведения RTMP: ' + error.message, 'error');
+                }
+            });
+            
+            // Обработчики для примеров потоков
+            document.querySelectorAll('.example-streams a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const streamUrl = this.getAttribute('data-stream');
+                    rtmpUrl.value = streamUrl;
+                });
+            });
+            
+            // Обработчики событий RTMP плеера
+            rtmpPlayer.on('error', function() {
+                showStatus('Ошибка воспроизведения RTMP потока', 'error');
+            });
+            
+            rtmpPlayer.on('playing', function() {
+                showStatus('RTMP поток воспроизводится', 'success');
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 3000);
+            });
+            
             // Конвертер файлов
             document.getElementById('uploadConvert').addEventListener('click', function() {
                 convertFile.click();
             });
             
-            convertBtn.addEventListener('click', async function() {
-                if (!convertFile.files.length) {
-                    showStatus('Пожалуйста, выберите файл для конвертации', 'error');
-                    return;
-                }
-                
-                if (!ffmpeg) {
-                    showStatus('Конвертер еще не загрузился. Подождите немного.', 'error');
-                    return;
-                }
-                
-                const file = convertFile.files[0];
-                const fromFormat = document.getElementById('fromFormat').value;
-                const toFormat = document.getElementById('toFormat').value;
-                
-                // Скрываем предыдущие результаты
-                converterResult.style.display = 'none';
-                
-                // Показываем прогресс
-                conversionProgress.style.display = 'block';
-                conversionProgressBar.style.width = '0%';
-                
-                try {
-                    showStatus('Начата конвертация файла...', 'info');
-                    
-                    // Определяем исходный формат если auto
-                    let inputFormat = fromFormat;
-                    if (inputFormat === 'auto') {
-                        const fileName = file.name.toLowerCase();
-                        if (fileName.endsWith('.mp3')) inputFormat = 'mp3';
-                        else if (fileName.endsWith('.wav')) inputFormat = 'wav';
-                        else if (fileName.endsWith('.flac')) inputFormat = 'flac';
-                        else if (fileName.endsWith('.ogg')) inputFormat = 'ogg';
-                        else if (fileName.endsWith('.mp4')) inputFormat = 'mp4';
-                        else if (fileName.endsWith('.avi')) inputFormat = 'avi';
-                        else if (fileName.endsWith('.webm')) inputFormat = 'webm';
-                        else if (fileName.endsWith('.png')) inputFormat = 'png';
-                        else if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) inputFormat = 'jpg';
-                        else if (fileName.endsWith('.gif')) inputFormat = 'gif';
-                        else if (fileName.endsWith('.bmp')) inputFormat = 'bmp';
-                        else if (fileName.endsWith('.webp')) inputFormat = 'webp';
-                        else {
-                            throw new Error('Не удалось определить формат файла');
-                        }
-                    }
-                    
-                    // Записываем файл в память FFmpeg
-                    const inputFileName = `input.${inputFormat}`;
-                    const outputFileName = `output.${toFormat}`;
-                    
-                    ffmpeg.FS('writeFile', inputFileName, new Uint8Array(await file.arrayBuffer()));
-                    
-                    // Запускаем конвертацию
-                    let ffmpegCommand = [];
-                    
-                    if (['mp3', 'wav', 'ogg', 'flac'].includes(inputFormat) && ['mp3', 'wav', 'ogg'].includes(toFormat)) {
-                        // Аудио в аудио
-                        ffmpegCommand = ['-i', inputFileName, '-y', outputFileName];
-                    } 
-                    else if (['mp4', 'avi', 'webm'].includes(inputFormat) && ['mp4', 'avi', 'webm'].includes(toFormat)) {
-                        // Видео в видео
-                        ffmpegCommand = ['-i', inputFileName, '-y', outputFileName];
-                    }
-                    else if (['png', 'jpg', 'gif', 'bmp', 'webp'].includes(inputFormat) && ['png', 'jpg', 'gif', 'bmp', 'webp'].includes(toFormat)) {
-                        // Изображение в изображение
-                        ffmpegCommand = ['-i', inputFileName, '-y', outputFileName];
-                    }
-                    else if (['mp4', 'avi', 'webm'].includes(inputFormat) && ['mp3', 'wav', 'ogg'].includes(toFormat)) {
-                        // Извлечение аудио из видео
-                        ffmpegCommand = ['-i', inputFileName, '-vn', '-y', outputFileName];
-                    }
-                    else {
-                        throw new Error('Данный тип конвертации не поддерживается');
-                    }
-                    
-                    await ffmpeg.run(...ffmpegCommand);
-                    
-                    // Читаем результат
-                    const data = ffmpeg.FS('readFile', outputFileName);
-                    
-                    // Создаем ссылку для скачивания
-                    const blob = new Blob([data.buffer], { type: 'application/octet-stream' });
-                    const url = URL.createObjectURL(blob);
-                    downloadLink.href = url;
-                    downloadLink.download = `converted.${toFormat}`;
-                    
-                    // Показываем результат
-                    conversionProgressBar.style.width = '100%';
-                    showStatus('Конвертация завершена успешно!', 'success');
-                    converterResult.style.display = 'block';
-                    
-                } catch (error) {
-                    showStatus('Ошибка при конвертации: ' + error.message, 'error');
-                    console.error(error);
-                }
+            convertBtn.addEventListener('click', function() {
+                showStatus('Для конвертации файлов требуется серверная часть', 'info');
             });
             
             // Функция для отображения статуса
@@ -692,6 +712,10 @@
                 
                 document.getElementById('fromFormat').value = format;
             });
+        });
+    </script>
+</body>
+</html>
         });
     </script>
 </body>
